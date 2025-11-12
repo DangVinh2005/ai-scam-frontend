@@ -1,0 +1,50 @@
+{
+  "manifest_version": 3,
+  "name": "AI Anti-Scam Protection",
+  "version": "1.0.0",
+  "description": "Scans websites for phishing indicators and displays warnings.",
+  "action": {
+    "default_title": "AI Anti-Scam Protection",
+    "default_popup": "popup/popup.html"
+  },
+  "options_page": "options/options.html",
+  "background": {
+    "service_worker": "background/background.js",
+    "type": "module"
+  },
+  "permissions": [
+    "storage",
+    "tabs",
+    "activeTab"
+  ],
+  "host_permissions": [
+    "<all_urls>",
+    "http://localhost:5000/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "css": ["content/content.css"],
+      "js": [
+        "utils/constants.js",
+        "utils/storage.js",
+        "ui/notification.js",
+        "ui/warning-banner.js",
+        "content/scanner.js",
+        "content/content.js"
+      ],
+      "run_at": "document_idle",
+      "all_frames": false
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "assets/*",
+        "ui/*"
+      ],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}
+

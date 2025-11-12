@@ -1,0 +1,45 @@
+<!doctype html>
+<html>
+<head>
+	<meta charset="utf-8" />
+	<title>AI Anti-Scam Protection</title>
+	<link rel="stylesheet" href="popup.css" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	</head>
+<body>
+	<div id="app">
+		<header class="header">
+			<img class="logo" src="../assets/icons/shield-safe.svg" alt="AI Anti-Scam" />
+			<h1 class="title">AI Anti-Scam</h1>
+		</header>
+
+		<section class="section">
+			<div class="row">
+				<div class="label">URL</div>
+				<div class="value" id="url">Loading...</div>
+			</div>
+			<div class="row">
+				<div class="label">Status</div>
+				<div class="value" id="status">-</div>
+			</div>
+			<div class="row">
+				<div class="label">Scanned</div>
+				<div class="value" id="timestamp">-</div>
+			</div>
+		</section>
+
+		<section class="actions">
+			<button id="btnOptions" class="btn">Open Options</button>
+			<button id="btnClear" class="btn btn-secondary">Clear History</button>
+		</section>
+
+		<footer class="footer">
+			<small>AI Anti-Scam Protection</small>
+		</footer>
+	</div>
+
+	<script src="popup.js"></script>
+</body>
+</html>
+
+

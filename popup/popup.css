@@ -1,0 +1,119 @@
+:root {
+	--safe: #27ae60;
+	--danger: #e74c3c;
+	--neutral: #555;
+}
+
+html, body {
+	margin: 0;
+	padding: 0;
+}
+
+body {
+	width: 320px;
+	font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+	color: #222;
+	background: #f7f8fa;
+}
+
+.header {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 12px 12px 6px 12px;
+}
+
+.logo {
+	width: 20px;
+	height: 20px;
+}
+
+.title {
+	font-size: 15px;
+	font-weight: 700;
+	margin: 0;
+}
+
+.section {
+	background: #fff;
+	margin: 12px;
+	padding: 10px 12px;
+	border-radius: 10px;
+	box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+}
+
+.row {
+	display: flex;
+	gap: 10px;
+	padding: 6px 0;
+}
+
+.label {
+	width: 85px;
+	color: #666;
+	font-size: 12px;
+}
+
+.value {
+	flex: 1;
+	font-size: 12px;
+	word-break: break-all;
+}
+
+.badge {
+	padding: 2px 8px;
+	border-radius: 999px;
+	font-weight: 600;
+	font-size: 11px;
+	color: #fff;
+}
+
+.badge-safe {
+	background: var(--safe);
+}
+
+.badge-danger {
+	background: var(--danger);
+}
+
+.badge-neutral {
+	background: var(--neutral);
+}
+.badge-warning {
+	background: #f39c12;
+}
+
+.actions {
+	display: flex;
+	gap: 8px;
+	padding: 0 12px 12px 12px;
+}
+
+.btn {
+	flex: 1;
+	padding: 8px 10px;
+	border-radius: 8px;
+	border: 1px solid #d9d9d9;
+	background: #fff;
+	cursor: pointer;
+	font-size: 12px;
+	transition: background 0.15s ease;
+}
+
+.btn:hover {
+	background: #f1f1f1;
+}
+
+.btn-secondary {
+	background: #fafafa;
+}
+
+.footer {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	padding: 8px 0 12px;
+	color: #888;
+}
+
+
