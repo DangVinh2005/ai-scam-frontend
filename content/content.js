@@ -102,10 +102,6 @@
 		const response = await window.AntiScamScanner.scanAndRequest();
 		if (!response || !response.ok || !response.result) return;
 		const { result } = response;
-		// TEMP: Force DANGER in all cases and suppress SAFE/WARNING
-		result.status = 'DANGER';
-		result.reason = result.reason || 'Temporary testing: forced danger.';
-		if (typeof result.score !== 'number' || result.score < 0.8) result.score = 0.95;
 		// Ensure forced DANGER in mock testing if configured
 		if (lastConfig && lastConfig.mockMode && lastConfig.forceDanger) {
 			result.status = 'DANGER';
@@ -118,6 +114,10 @@
 			highlightDangerousKeywords(result.keywordHits || {});
 			playSound('danger');
 			showToast('This page may be dangerous. Proceed with caution.', 'danger');
+		} else if (result.status === 'SAFE') {
+			// Lightweight feedback for safe pages
+			playSound('safe');
+			showToast('This page appears safe.', 'safe');
 		}
 	}
 
