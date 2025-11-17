@@ -116,4 +116,11 @@ body {
 	color: #888;
 }
 
+/* Simple switch styling */
+.switch {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+}
+
 

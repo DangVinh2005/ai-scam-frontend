@@ -1,6 +1,6 @@
 // Base configuration and shared constants
 const DEFAULT_API_BASE = 'http://localhost:5000';
-const CHECK_ENDPOINT = '/check';
+const CHECK_ENDPOINT = '/predict';
 
 const DEFAULT_CONFIG = {
 	apiBaseUrl: DEFAULT_API_BASE,

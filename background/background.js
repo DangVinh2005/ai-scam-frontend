@@ -117,6 +117,21 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 				return;
 			}
 
+			// Global toggle: if protection is off, do not scan
+			if (!cfg.autoProtection) {
+				const result = {
+					status: 'SAFE',
+					reason: 'Protection is disabled.',
+					score: 0.0,
+					ts,
+					url,
+					domain,
+					keywordHits: keywordHits || {}
+				};
+				sendResponse({ ok: true, result });
+				return;
+			}
+
 			// Mock mode: simulate results without hitting backend
 			if (cfg.mockMode) {
 				const hits = keywordHits || {};
