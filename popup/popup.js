@@ -66,6 +66,18 @@ async function loadData() {
 	});
 }
 
+function showReportStatus(message, type = 'success') {
+	const statusEl = document.getElementById('reportStatus');
+	if (!statusEl) return;
+	
+	statusEl.textContent = message;
+	statusEl.className = `report-status show ${type}`;
+	
+	setTimeout(() => {
+		statusEl.className = 'report-status';
+	}, 5000);
+}
+
 function initActions() {
 	const toggle = document.getElementById('toggleProtection');
 	if (toggle) {
@@ -88,6 +100,100 @@ function initActions() {
 		chrome.runtime.sendMessage({ type: 'CLEAR_HISTORY' }, () => {
 			window.close();
 		});
+	});
+
+	// Report Form
+	const btnShowReport = document.getElementById('btnShowReport');
+	const reportSection = document.getElementById('reportSection');
+	const btnCancelReport = document.getElementById('btnCancelReport');
+	const btnSubmitReport = document.getElementById('btnSubmitReport');
+
+	// Show report form
+	btnShowReport.addEventListener('click', async () => {
+		reportSection.style.display = 'block';
+		btnShowReport.style.display = 'none';
+		
+		// Pre-fill current URL (readonly, auto-filled from active tab)
+		const url = await getActiveTabUrl();
+		if (url) {
+			document.getElementById('reportLink').value = url;
+		} else {
+			document.getElementById('reportLink').value = '(Unable to get current URL)';
+		}
+	});
+
+	// Cancel report
+	btnCancelReport.addEventListener('click', () => {
+		reportSection.style.display = 'none';
+		btnShowReport.style.display = 'block';
+		// Clear form (note: link is readonly and will be refilled on next open)
+		document.getElementById('reportLink').value = '';
+		document.getElementById('reportReason').value = '';
+		document.getElementById('reportReasonCustom').value = '';
+		document.getElementById('reportStatus').className = 'report-status';
+	});
+
+	// Submit report
+	btnSubmitReport.addEventListener('click', async () => {
+		// IMPORTANT: Always get URL from active tab (don't trust input field)
+		// This prevents users from bypassing readonly via dev tools
+		const link = await getActiveTabUrl();
+		
+		const reasonSelect = document.getElementById('reportReason').value;
+		const reasonCustom = document.getElementById('reportReasonCustom').value.trim();
+
+		// Validation
+		if (!link) {
+			showReportStatus('Unable to get current page URL', 'error');
+			return;
+		}
+
+		if (!reasonSelect) {
+			showReportStatus('Please select a reason', 'error');
+			return;
+		}
+
+		// Combine reason
+		let reason = reasonSelect;
+		if (reasonCustom) {
+			reason = `${reasonSelect}: ${reasonCustom}`;
+		}
+
+		// Disable button
+		btnSubmitReport.disabled = true;
+		btnSubmitReport.textContent = 'Submitting...';
+		showReportStatus('Sending report...', 'warning');
+
+		try {
+			// Send report through background
+			const resp = await send('SUBMIT_REPORT', { 
+				payload: { link, reason }
+			});
+
+			if (resp && resp.ok && resp.result && resp.result.success) {
+				showReportStatus(
+					`✅ Report submitted! (Risk: ${resp.result.risk_level}, Count: ${resp.result.report_count})`,
+					'success'
+				);
+				
+				// Clear form after 2 seconds
+				setTimeout(() => {
+					reportSection.style.display = 'none';
+					btnShowReport.style.display = 'block';
+					document.getElementById('reportLink').value = '';
+					document.getElementById('reportReason').value = '';
+					document.getElementById('reportReasonCustom').value = '';
+				}, 2000);
+			} else {
+				const msg = resp?.result?.message || 'Failed to submit report';
+				showReportStatus(`❌ ${msg}`, 'error');
+			}
+		} catch (err) {
+			showReportStatus(`❌ Error: ${err.message}`, 'error');
+		} finally {
+			btnSubmitReport.disabled = false;
+			btnSubmitReport.textContent = 'Submit Report';
+		}
 	});
 }
 

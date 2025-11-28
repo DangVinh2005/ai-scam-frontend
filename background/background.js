@@ -1,5 +1,5 @@
 // Background service worker (module)
-import { checkUrl } from '../utils/api.js';
+import { checkUrl, reportLink } from '../utils/api.js';
 
 const DEFAULTS = {
 	apiBaseUrl: 'http://localhost:5000',
@@ -21,6 +21,38 @@ function getDomainFromUrl(url) {
 	} catch {
 		return null;
 	}
+}
+
+function isWhitelisted(url, whitelistEntries) {
+	if (!url || !whitelistEntries || whitelistEntries.length === 0) {
+		return false;
+	}
+	
+	const domain = getDomainFromUrl(url);
+	if (!domain) return false;
+	
+	return whitelistEntries.some((entry) => {
+		// Normalize entry - extract domain if it's a full URL
+		let entryDomain = entry.toLowerCase().trim();
+		
+		// Remove protocol
+		entryDomain = entryDomain.replace(/^https?:\/\//, '');
+		// Remove trailing slash and path
+		entryDomain = entryDomain.split('/')[0];
+		// Remove port if any
+		entryDomain = entryDomain.split(':')[0];
+		
+		const normalizedDomain = domain.toLowerCase();
+		
+		// Exact match
+		if (entryDomain === normalizedDomain) return true;
+		
+		// Match without www
+		const entryWithoutWww = entryDomain.replace(/^www\./, '');
+		const domainWithoutWww = normalizedDomain.replace(/^www\./, '');
+		
+		return entryWithoutWww === domainWithoutWww;
+	});
 }
 
 function getItem(key, defaultValue = null) {
@@ -97,6 +129,71 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 			return;
 		}
 
+		if (message.type === 'CLEAR_CACHE') {
+			// Clear local extension cache
+			await setCache({});
+			await setItem(STORAGE_KEYS.lastScan, null);
+			
+			// Call backend to clear server cache
+			try {
+				const cfg = await getConfig();
+				const apiBaseUrl = cfg.apiBaseUrl || DEFAULTS.apiBaseUrl;
+				const response = await fetch(`${apiBaseUrl}/cache/clear`, {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' }
+				});
+				const data = await response.json();
+				sendResponse({ ok: true, message: `Cache cleared! (${data.cleared || 0} server entries removed)` });
+			} catch (err) {
+				console.error('Failed to clear server cache:', err);
+				sendResponse({ ok: true, message: 'Local cache cleared (server unreachable)' });
+			}
+			return;
+		}
+
+		if (message.type === 'CLEAR_SERVER_HISTORY') {
+			// Call backend to clear server log history
+			try {
+				const cfg = await getConfig();
+				const apiBaseUrl = cfg.apiBaseUrl || DEFAULTS.apiBaseUrl;
+				const response = await fetch(`${apiBaseUrl}/history/clear`, {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' }
+				});
+				const data = await response.json();
+				sendResponse({ ok: true, message: data.message || 'History cleared!' });
+			} catch (err) {
+				console.error('Failed to clear server history:', err);
+				sendResponse({ ok: false, message: 'Failed to clear history (server unreachable)' });
+			}
+			return;
+		}
+
+		if (message.type === 'CLEAR_ALL') {
+			// Clear everything: local cache + history + server cache + server history
+			await setCache({});
+			await setItem(STORAGE_KEYS.lastScan, null);
+			await setItem(STORAGE_KEYS.history, []);
+			
+			try {
+				const cfg = await getConfig();
+				const apiBaseUrl = cfg.apiBaseUrl || DEFAULTS.apiBaseUrl;
+				const response = await fetch(`${apiBaseUrl}/clear_all`, {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' }
+				});
+				const data = await response.json();
+				sendResponse({ 
+					ok: true, 
+					message: `All data cleared! (${data.cache_cleared || 0} cache entries, logs ${data.log_cleared ? 'cleared' : 'not found'})`
+				});
+			} catch (err) {
+				console.error('Failed to clear server data:', err);
+				sendResponse({ ok: true, message: 'Local data cleared (server unreachable)' });
+			}
+			return;
+		}
+
 		if (message.type === 'GET_LAST_SCAN') {
 			const { url } = message;
 			const domain = getDomainFromUrl(url);
@@ -158,25 +255,26 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 				return;
 			}
 
-			// Whitelist check
-			if (cfg.whitelist.some((d) => d.toLowerCase() === domain.toLowerCase())) {
-				const result = {
-					status: 'SAFE',
-					reason: 'Domain is whitelisted.',
-					score: 0.01,
-					ts,
-					url,
-					domain,
-					keywordHits: keywordHits || {}
-				};
-				const cache = await getCache();
-				cache[domain] = result;
-				await setCache(cache);
-				await setItem(STORAGE_KEYS.lastScan, result);
-				await pushHistory(result);
-				sendResponse({ ok: true, result });
-				return;
-			}
+		// Whitelist check - use improved matching logic
+		if (isWhitelisted(url, cfg.whitelist)) {
+			console.log(`URL ${url} is whitelisted`);
+			const result = {
+				status: 'SAFE',
+				reason: 'Domain is whitelisted.',
+				score: 0.01,
+				ts,
+				url,
+				domain,
+				keywordHits: keywordHits || {}
+			};
+			const cache = await getCache();
+			cache[domain] = result;
+			await setCache(cache);
+			await setItem(STORAGE_KEYS.lastScan, result);
+			await pushHistory(result);
+			sendResponse({ ok: true, result });
+			return;
+		}
 
 			try {
 				const apiBaseUrl = cfg.apiBaseUrl || DEFAULTS.apiBaseUrl;
@@ -224,6 +322,66 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 			// Placeholder: In a real app this could POST to a report endpoint
 			console.warn('User reported potential scam:', message.payload);
 			sendResponse({ ok: true });
+			return;
+		}
+
+		if (message.type === 'SUBMIT_REPORT') {
+			// New report system - gửi report về backend
+			const { link, reason } = message.payload || {};
+			
+			if (!link) {
+				sendResponse({ ok: false, error: 'Link is required' });
+				return;
+			}
+
+			try {
+				const cfg = await getConfig();
+				const apiBaseUrl = cfg.apiBaseUrl || DEFAULTS.apiBaseUrl;
+
+				// Lấy device ID và user ID
+				let deviceId = null;
+				let userId = null;
+
+				try {
+					// Try to get from storage
+					const storage = await new Promise((resolve) => {
+						chrome.storage.local.get(['ai_antiscam_device_id', 'ai_antiscam_user_id'], (result) => {
+							resolve(result);
+						});
+					});
+
+					deviceId = storage.ai_antiscam_device_id;
+					userId = storage.ai_antiscam_user_id;
+
+					// If not exist, generate new ones (simplified version)
+					if (!deviceId) {
+						deviceId = 'device_' + Math.random().toString(36).substr(2, 16);
+						chrome.storage.local.set({ ai_antiscam_device_id: deviceId });
+					}
+					if (!userId) {
+						userId = 'user_' + Math.random().toString(36).substr(2, 12);
+						chrome.storage.local.set({ ai_antiscam_user_id: userId });
+					}
+				} catch (err) {
+					console.error('Error getting device/user ID:', err);
+					// Fallback
+					deviceId = 'unknown';
+					userId = 'anonymous';
+				}
+
+				// Call backend API
+				const result = await reportLink(apiBaseUrl, {
+					link,
+					reason,
+					device_id: deviceId,
+					user_id: userId
+				});
+
+				sendResponse({ ok: true, result });
+			} catch (err) {
+				console.error('Report submission error:', err);
+				sendResponse({ ok: false, error: err.message });
+			}
 			return;
 		}
 	})();

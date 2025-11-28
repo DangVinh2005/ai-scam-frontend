@@ -28,6 +28,7 @@
       "js": [
         "utils/constants.js",
         "utils/storage.js",
+        "utils/fingerprint.js",
         "ui/notification.js",
         "ui/warning-banner.js",
         "content/scanner.js",

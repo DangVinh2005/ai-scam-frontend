@@ -109,12 +109,19 @@
 			if (typeof result.score !== 'number' || result.score < 0.7) result.score = 0.9;
 		}
 
-		if (result.status === 'DANGER') {
+		const status = String(result.status || '').toUpperCase();
+
+		if (status === 'DANGER') {
 			injectBanner(result);
 			highlightDangerousKeywords(result.keywordHits || {});
 			playSound('danger');
 			showToast('This page may be dangerous. Proceed with caution.', 'danger');
-		} else if (result.status === 'SAFE') {
+		} else if (status === 'WARNING') {
+			// Softer UI for warning: show banner + toast but no blocking modal
+			injectBanner({ ...result, status: 'WARNING' });
+			highlightDangerousKeywords(result.keywordHits || {});
+			showToast('This page has some suspicious indicators. Please be cautious.', 'warning');
+		} else if (status === 'SAFE') {
 			// Lightweight feedback for safe pages
 			playSound('safe');
 			showToast('This page appears safe.', 'safe');

@@ -37,14 +37,47 @@
 			</div>
 		</section>
 
-		<section class="actions">
-			<button id="btnOptions" class="btn">Open Options</button>
-			<button id="btnClear" class="btn btn-secondary">Clear History</button>
-		</section>
+	<section class="actions">
+		<button id="btnOptions" class="btn">Open Options</button>
+		<button id="btnClear" class="btn btn-secondary">Clear History</button>
+		<button id="btnShowReport" class="btn btn-report">Report Link</button>
+	</section>
 
-		<footer class="footer">
-			<small>AI Anti-Scam Protection</small>
-		</footer>
+	<!-- Report Form (hidden by default) -->
+	<section id="reportSection" class="report-section" style="display: none;">
+		<h2 class="report-title">Report Suspicious Link</h2>
+		<div class="report-form">
+			<div class="form-group">
+				<label for="reportLink">Link URL: <span class="auto-label">(auto-filled)</span></label>
+				<input type="text" id="reportLink" class="form-input form-input-readonly" readonly placeholder="Loading current page URL..." />
+			</div>
+			<div class="form-group">
+				<label for="reportReason">Reason:</label>
+				<select id="reportReason" class="form-select">
+					<option value="">-- Select a reason --</option>
+					<option value="phishing">Phishing / Fake Site</option>
+					<option value="malware">Malware / Virus</option>
+					<option value="scam">Scam / Fraud</option>
+					<option value="spam">Spam</option>
+					<option value="suspicious">Suspicious Activity</option>
+					<option value="other">Other</option>
+				</select>
+			</div>
+			<div class="form-group">
+				<label for="reportReasonCustom">Additional Details (optional):</label>
+				<textarea id="reportReasonCustom" class="form-textarea" rows="2" placeholder="Describe why this link is suspicious..."></textarea>
+			</div>
+			<div class="report-actions">
+				<button id="btnSubmitReport" class="btn btn-primary">Submit Report</button>
+				<button id="btnCancelReport" class="btn btn-secondary">Cancel</button>
+			</div>
+			<div id="reportStatus" class="report-status"></div>
+		</div>
+	</section>
+
+	<footer class="footer">
+		<small>AI Anti-Scam Protection</small>
+	</footer>
 	</div>
 
 	<script src="popup.js"></script>

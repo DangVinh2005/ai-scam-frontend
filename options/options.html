@@ -1,66 +1,132 @@
-<!doctype html>
+<!DOCTYPE html>
 <html>
-<head>
-	<meta charset="utf-8" />
-	<title>AI Anti-Scam Options</title>
-	<link rel="stylesheet" href="options.css" />
-	<meta name="viewport" content="width=device-width, initial-scale=1" />
-</head>
-<body>
-	<div class="wrap">
-		<header class="header">
-			<img class="logo" src="../assets/icons/shield-safe.svg" alt="AI Anti-Scam" />
-			<h1 class="title">AI Anti-Scam Settings</h1>
-		</header>
+  <head>
+    <meta charset="utf-8" />
+    <title>AI Anti-Scam Options</title>
+    <link rel="stylesheet" href="options.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+  </head>
+  <body>
+    <div class="wrap">
+      <header class="header">
+        <img
+          class="logo"
+          src="../assets/icons/shield-safe.svg"
+          alt="AI Anti-Scam"
+        />
+        <h1 class="title">AI Anti-Scam Settings</h1>
+      </header>
 
-		<section class="card">
-			<h2>Backend</h2>
-			<label class="field">
-				<span class="label">API Base URL</span>
-				<input type="url" id="apiBaseUrl" placeholder="http://localhost:5000" />
-			</label>
-		</section>
+      <section class="card">
+        <h2>Backend Server</h2>
+        <label class="field">
+          <span class="label">API Base URL</span>
+          <input
+            type="url"
+            id="apiBaseUrl"
+            placeholder="http://localhost:5000"
+          />
+        </label>
+        <div
+          style="
+            margin-top: 12px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+          "
+        >
+          <div
+            style="
+              display: flex;
+              align-items: center;
+              gap: 8px;
+              margin-bottom: 4px;
+            "
+          >
+            <span style="font-size: 13px; font-weight: 600"
+              >Server Status:</span
+            >
+            <span id="serverStatus" style="font-size: 13px">Checking...</span>
+          </div>
+          <div style="font-size: 12px; color: #666; margin-top: 4px">
+            <span id="serverInfo">-</span>
+          </div>
+          <button
+            id="btnTestConnection"
+            class="btn"
+            style="margin-top: 8px; font-size: 12px; padding: 6px 10px"
+          >
+            Test Connection
+          </button>
+        </div>
+      </section>
 
-		<section class="card">
-			<h2>Protection</h2>
-			<label class="switch">
-				<input type="checkbox" id="autoProtection" />
-				<span>Enable Auto-Protection</span>
-			</label>
-		</section>
+      <section class="card">
+        <h2>Protection Settings</h2>
+        <label class="switch">
+          <input type="checkbox" id="autoProtection" />
+          <span>Enable Auto-Protection (scan all websites)</span>
+        </label>
+        <p style="margin-top: 8px; font-size: 12px; color: #666">
+          When enabled, the extension will automatically scan all websites you
+          visit for phishing and scam indicators.
+        </p>
+      </section>
 
-		<section class="card">
-			<h2>Testing</h2>
-			<label class="switch">
-				<input type="checkbox" id="mockMode" />
-				<span>Enable Mock Mode (no backend)</span>
-			</label>
-			<label class="switch" style="margin-top:8px">
-				<input type="checkbox" id="forceDanger" />
-				<span>Force Danger (for testing)</span>
-			</label>
-		</section>
+      <section class="card">
+        <h2>Trusted Domains (Whitelist)</h2>
+        <p style="margin-bottom: 10px; font-size: 12px; color: #666">
+          Add domains that you trust and want to skip scanning. These domains
+          will always be marked as safe.
+        </p>
+        <div class="whitelist">
+          <div class="add">
+            <input type="text" id="wlDomain" placeholder="example.com" />
+            <button id="btnAdd" class="btn">Add Domain</button>
+          </div>
+          <ul id="wlList" class="list"></ul>
+        </div>
+      </section>
 
-		<section class="card">
-			<h2>Whitelist Domains</h2>
-			<div class="whitelist">
-				<div class="add">
-					<input type="text" id="wlDomain" placeholder="example.com" />
-					<button id="btnAdd" class="btn">Add</button>
-				</div>
-				<ul id="wlList" class="list"></ul>
-			</div>
-		</section>
+      <section class="card">
+        <h2>Cache & History</h2>
+        <p style="margin-bottom: 12px; color: #666; font-size: 13px">
+          Manage cached predictions and server logs. Clearing cache will force
+          re-scanning of all websites.
+        </p>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap">
+          <button
+            id="btnClearCache"
+            class="btn"
+            title="Clear local and server cache"
+          >
+            🗑️ Clear Cache
+          </button>
+          <button
+            id="btnClearHistory"
+            class="btn"
+            title="Clear server log history"
+          >
+            📝 Clear Logs
+          </button>
+          <button
+            id="btnClearAll"
+            class="btn btn-danger"
+            title="Clear everything: cache + logs + history"
+          >
+            ⚠️ Clear All
+          </button>
+        </div>
+        <div id="clearStatus" class="status-message"></div>
+      </section>
 
-		<section class="actions">
-			<button id="btnSave" class="btn primary">Save</button>
-			<button id="btnReload" class="btn">Reload</button>
-		</section>
-	</div>
+      <section class="actions">
+        <button id="btnSave" class="btn primary">Save</button>
+        <button id="btnReload" class="btn">Reload</button>
+      </section>
+    </div>
 
-	<script src="../utils/constants.js"></script>
-	<script src="options.js"></script>
-</body>
+    <script src="../utils/constants.js"></script>
+    <script src="options.js"></script>
+  </body>
 </html>
-
-
